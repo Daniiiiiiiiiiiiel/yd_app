@@ -120,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         clientModal.classList.add('hidden');
+        location.reload();
     });
 
 
@@ -171,6 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm('¿Seguro que quieres eliminar este cliente?')) {
             await deleteDoc(doc(db, "clientes", currentDetailClientId));
             clientDetailsView.classList.add('hidden');
+            location.reload();
         }
     });
 

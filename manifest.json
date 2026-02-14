@@ -4,7 +4,7 @@
     "description": "Aplicación para el registro y gestión de clientes y suscripciones.",
     "start_url": "./index.html",
     "display": "standalone",
-    "background_color": "#0a0a0a",
+    "background_color": "#000000",
     "theme_color": "#e63946",
     "icons": [
         {
