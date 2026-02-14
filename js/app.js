@@ -172,8 +172,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (confirm('¿Seguro que quieres eliminar este cliente?')) {
             await deleteDoc(doc(db, "clientes", currentDetailClientId));
-            // Recarga la página por completo para asegurar que vuelva al inicio limpio
-            location.reload();
+            // Forzamos la recarga al inicio de forma agresiva
+            window.location.replace(window.location.pathname);
         }
     });
 

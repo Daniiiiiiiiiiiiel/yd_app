@@ -1,4 +1,4 @@
-const CACHE_NAME = 'yd-app-v1';
+const CACHE_NAME = 'yd-app-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -17,6 +17,7 @@ self.addEventListener('install', (event) => {
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
+  self.skipWaiting();
 });
 
 // Activate Event
