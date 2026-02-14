@@ -128,7 +128,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Search
     searchInput.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
-        const filtered = allClients.filter(c => c.userNumber.toLowerCase().includes(term));
+        // Filtra los clientes comparando el término de búsqueda con el userNumber
+        const filtered = allClients.filter(c => c.userNumber.toString().toLowerCase().includes(term));
         renderClientList(filtered);
     });
 
@@ -171,8 +172,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (confirm('¿Seguro que quieres eliminar este cliente?')) {
             await deleteDoc(doc(db, "clientes", currentDetailClientId));
-            clientDetailsView.classList.add('hidden');
-            location.reload();
+            // Redirige al inicio (sin el hash o vista de detalle) antes de recargar
+            window.location.href = window.location.pathname;
         }
     });
 
