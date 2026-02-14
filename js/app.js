@@ -172,8 +172,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (confirm('¿Seguro que quieres eliminar este cliente?')) {
             await deleteDoc(doc(db, "clientes", currentDetailClientId));
-            // Redirige al inicio (sin el hash o vista de detalle) antes de recargar
-            window.location.href = window.location.pathname;
+            // Recarga la página por completo para asegurar que vuelva al inicio limpio
+            location.reload();
         }
     });
 
