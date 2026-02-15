@@ -83,7 +83,7 @@ header h1 {
     background-clip: text;
 }
 
-#addClientBtn {
+#addAccountBtn {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
     border: 2px solid rgba(255, 255, 255, 0.4);
     color: white;
@@ -98,16 +98,17 @@ header h1 {
     font-size: 0.85rem;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    transition: opacity 0.2s ease;
+    transition: all 0.3s ease;
 }
 
-#addClientBtn:hover {
-    opacity: 0.8;
+#addAccountBtn:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.2) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
-#addClientBtn i {
-    width: 18px;
-    height: 18px;
+#addAccountBtn:active {
+    transform: translateY(0);
 }
 
 /* ========== MAIN CONTENT ========== */
@@ -382,6 +383,128 @@ main {
 .btn-cancel-sm i {
     width: 20px;
     height: 20px;
+}
+
+/* Select Styling */
+select.form-input,
+select.detail-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+    color: var(--text-white);
+    background-color: var(--surface-light);
+}
+
+select.form-input option,
+select.detail-input option {
+    background-color: var(--card-bg);
+    color: var(--text-white);
+}
+
+/* Custom Confirm Modal */
+.confirm-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.confirm-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.confirm-modal-content {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    padding: 2rem;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.confirm-modal-overlay.active .confirm-modal-content {
+    transform: scale(1);
+}
+
+.confirm-icon-box {
+    width: 60px;
+    height: 60px;
+    background: rgba(230, 57, 70, 0.1);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 1.5rem;
+    color: var(--primary-red);
+}
+
+.confirm-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-white);
+}
+
+.confirm-message {
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.confirm-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.btn-confirm-delete {
+    background: var(--error);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-confirm-delete:hover {
+    background: #d93838;
+}
+
+.btn-confirm-cancel {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-white);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-confirm-cancel:hover {
+    background: rgba(255, 255, 255, 0.05);
 }
 
 /* Detail Row Layout Fix */
@@ -904,4 +1027,55 @@ html {
     /* IE and Edge */
     scrollbar-width: none !important;
     /* Firefox */
+}
+
+/* ========== PROFILES STYLES ========== */
+.profiles-grid {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.profiles-list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.profile-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.75rem;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--border-color);
+}
+
+.profile-number {
+    font-weight: 500;
+    color: var(--text-white);
+}
+
+.profile-index {
+    color: var(--primary-red);
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-right: 10px;
+}
+
+.profile-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+    display: block;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.form-group-profile {
+    margin-bottom: 0.75rem;
+}
+
+.profile-input {
+    width: 100%;
 }

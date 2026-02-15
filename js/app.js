@@ -2,298 +2,645 @@ import { db } from "./firebase.js";
 import { collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-
-
 document.addEventListener('DOMContentLoaded', () => {
-    // Views
+    // === VIEWS ===
     const dashboardView = document.getElementById('dashboardView');
-    const clientDetailsView = document.getElementById('clientDetailsView');
+    const accountDetailsView = document.getElementById('accountDetailsView');
+    const profileDetailsView = document.getElementById('profileDetailsView');
 
-    // UI Elements
-    const clientListContainer = document.getElementById('clientList');
-    const addClientBtn = document.getElementById('addClientBtn');
-    const clientModal = document.getElementById('clientModal');
-    const closeModal = document.getElementById('closeModal');
-    const clientForm = document.getElementById('clientForm');
+    // === DASHBOARD ELEMENTS ===
+    const accountListContainer = document.getElementById('accountList');
+    const searchInput = document.getElementById('searchInput');
+    const addAccountBtn = document.getElementById('addAccountBtn');
+
+    // === ACCOUNT MODAL ELEMENTS ===
+    const accountModal = document.getElementById('accountModal');
+    const closeAccountModal = document.getElementById('closeAccountModal');
+    const accountForm = document.getElementById('accountForm');
+    const accountNameInput = document.getElementById('accountNameInput');
+    const accountDateInput = document.getElementById('accountDateInput');
+    const cancelAccountBtn = document.getElementById('cancelAccountBtn');
+    const accountIdHidden = document.getElementById('accountId');
+    const modalAccountTitle = document.getElementById('modalAccountTitle');
+
+    // === PROFILE MODAL ELEMENTS ===
+    const profileModal = document.getElementById('profileModal');
+    const closeProfileModal = document.getElementById('closeProfileModal');
+    const profileForm = document.getElementById('profileForm');
+    const profileNumberInput = document.getElementById('profileNumberInput');
+    const profileDateInput = document.getElementById('profileDateInput');
+    const profilePaymentProof = document.getElementById('profilePaymentProof');
+    const profileImagePreview = document.getElementById('profileImagePreview');
+    const profileImagePreviewContainer = document.getElementById('profileImagePreviewContainer');
+    const removeProfileImageBtn = document.getElementById('removeProfileImageBtn');
+    const cancelProfileBtn = document.getElementById('cancelProfileBtn');
+    const modalProfileTitle = document.getElementById('modalProfileTitle');
+
+    // === ACCOUNT DETAILS VIEW ELEMENTS ===
+    const backToDashBtn = document.getElementById('backToDashBtn');
+    const editAccountBtn = document.getElementById('editAccountBtn');
+    const editAccountActions = document.getElementById('editAccountActions');
+    const saveAccountEditBtn = document.getElementById('saveAccountEditBtn');
+    const cancelAccountEditBtn = document.getElementById('cancelAccountEditBtn');
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+
+    const detailAccountName = document.getElementById('detailAccountName');
+    const detailAccountDate = document.getElementById('detailAccountDate');
+    const editDetailAccountName = document.getElementById('editDetailAccountName');
+    const editDetailAccountDate = document.getElementById('editDetailAccountDate');
+
+    const profilesList = document.getElementById('profilesList');
+
+    // === PROFILE DETAILS VIEW ELEMENTS ===
+    const backToAccountBtn = document.getElementById('backToAccountBtn');
+    const editProfileBtn = document.getElementById('editProfileBtn');
+    const editProfileActions = document.getElementById('editProfileActions');
+    const saveProfileEditBtn = document.getElementById('saveProfileEditBtn');
+    const cancelProfileEditBtn = document.getElementById('cancelProfileEditBtn');
+    const deleteProfileBtn = document.getElementById('deleteProfileBtn');
+
+    const detailProfileNumber = document.getElementById('detailProfileNumber');
+    const detailProfileDate = document.getElementById('detailProfileDate');
+    const editDetailProfileNumber = document.getElementById('editDetailProfileNumber');
+    const editDetailProfileDate = document.getElementById('editDetailProfileDate');
+
+    const profileExp = document.getElementById('profileExp');
+    const profileRefund = document.getElementById('profileRefund');
+    const profileSupport = document.getElementById('profileSupport');
+
+    const detailPaymentImage = document.getElementById('detailPaymentImage');
+    const detailNoPayment = document.getElementById('detailNoPayment');
+    const editProfileImageContainer = document.getElementById('editProfileImageContainer');
+    const editPaymentProof = document.getElementById('editPaymentProof');
+
     const imageModal = document.getElementById('imageModal');
     const closeImageModal = document.getElementById('closeImageModal');
     const fullImage = document.getElementById('fullImage');
-    const paymentProofInput = document.getElementById('paymentProof');
-    const imagePreview = document.getElementById('imagePreview');
-    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
-    const removeImageBtn = document.getElementById('removeImageBtn');
-    const searchInput = document.getElementById('searchInput');
 
-    // Detail View Elements
-    const backBtn = document.getElementById('backBtn');
-    const editClientBtn = document.getElementById('editClientBtn');
-    const deleteClientBtn = document.getElementById('deleteClientBtn');
-    const saveEditBtn = document.getElementById('saveEditBtn');
-    const cancelEditBtn = document.getElementById('cancelEditBtn');
-    const editActions = document.getElementById('editActions');
 
-    // Detail Fields & Edit Inputs
-    const detailUserNumber = document.getElementById('detailUserNumber');
-    const detailProfiles = document.getElementById('detailProfiles');
-    const detailPurchaseDate = document.getElementById('detailPurchaseDate');
-    const editDetailUserNumber = document.getElementById('editDetailUserNumber');
-    const editDetailProfiles = document.getElementById('editDetailProfiles');
-    const editDetailPurchaseDate = document.getElementById('editDetailPurchaseDate');
+    // === STATE ===
+    let allAccounts = [];
+    let currentAccount = null;
+    let currentProfileIndex = null; // 0-4
+    let tempProfileImageBase64 = null;
+    let tempEditProfileImageBase64 = null;
 
-    const viewModes = document.querySelectorAll('.view-mode');
-    const editModes = document.querySelectorAll('.edit-mode');
-
-    // Detail Fields
-    const detailExp = document.getElementById('detailExp');
-    const detailRefund = document.getElementById('detailRefund');
-    const detailSupport = document.getElementById('detailSupport');
-    const detailPaymentImage = document.getElementById('detailPaymentImage');
-    const detailNoPayment = document.getElementById('detailNoPayment');
-
-    let currentImageBase64 = null;
-    let currentDetailClientId = null;
-    let allClients = [];
-    onSnapshot(collection(db, "clientes"), (snapshot) => {
-        allClients = [];
+    // === REALTIME DB ===
+    onSnapshot(collection(db, "cuentas"), (snapshot) => {
+        allAccounts = [];
         snapshot.forEach((docSnap) => {
-            allClients.push({
+            const data = docSnap.data();
+
+            // Normalize profiles to 5 fixed slots
+            let profilesFixed = [null, null, null, null, null];
+            if (data.profiles && Array.isArray(data.profiles)) {
+                for (let i = 0; i < 5; i++) {
+                    profilesFixed[i] = data.profiles[i] || null;
+                }
+            }
+
+            allAccounts.push({
                 id: docSnap.id,
-                ...docSnap.data()
+                accountName: data.accountName || "",
+                defaultDate: data.defaultDate || "",
+                profiles: profilesFixed
             });
         });
-        refreshView();
+        refreshDashboard();
+
+        // Handle Active Account Updates
+        if (currentAccount) {
+            const updated = allAccounts.find(a => a.id === currentAccount.id);
+            if (updated) {
+                currentAccount = updated;
+
+                // ALWAYS re-render the Account List view, so if we go "Back" it is fresh
+                renderAccountDetails(updated);
+
+                // If we are specifically viewing a profile, verify/render it too
+                if (!profileDetailsView.classList.contains('hidden') && currentProfileIndex !== null) {
+                    if (updated.profiles[currentProfileIndex]) {
+                        renderProfileDetails(updated, currentProfileIndex);
+                    } else {
+                        // Profile deleted remotely?
+                        goAccountView();
+                    }
+                }
+            } else {
+                // Account deleted
+                goHome();
+            }
+        }
+    });
+
+    function goBackToAccount() {
+        if (currentAccount) {
+            goAccountView();
+        } else {
+            goHome();
+        }
+    }
+
+
+    // === NAVIGATION ===
+    function goHome() {
+        dashboardView.classList.remove('hidden');
+        accountDetailsView.classList.add('hidden');
+        profileDetailsView.classList.add('hidden');
+        currentAccount = null;
+        currentProfileIndex = null;
+        closeAccountModalFn();
+        closeProfileModalFn();
+    }
+
+    function goAccountView() {
+        dashboardView.classList.add('hidden');
+        accountDetailsView.classList.remove('hidden');
+        profileDetailsView.classList.add('hidden');
+        currentProfileIndex = null;
+    }
+
+    function goProfileView() {
+        dashboardView.classList.add('hidden');
+        accountDetailsView.classList.add('hidden');
+        profileDetailsView.classList.remove('hidden');
+    }
+
+    backToDashBtn.addEventListener('click', goHome);
+    backToAccountBtn.addEventListener('click', goAccountView);
+
+
+    // === DASHBOARD LOGIC ===
+    function refreshDashboard() {
+        allAccounts.sort((a, b) => new Date(b.defaultDate) - new Date(a.defaultDate));
+        searchAndRender(searchInput.value);
+    }
+
+    searchInput.addEventListener('input', (e) => searchAndRender(e.target.value));
+
+    function searchAndRender(term) {
+        term = term.toLowerCase();
+        accountListContainer.innerHTML = '';
+
+        const filtered = allAccounts.filter(acc => {
+            if (acc.accountName.toLowerCase().includes(term)) return true;
+            return acc.profiles.some(p => p && p.number && p.number.toLowerCase().includes(term));
+        });
+
+        if (filtered.length === 0) {
+            document.getElementById('emptyState').classList.remove('hidden');
+        } else {
+            document.getElementById('emptyState').classList.add('hidden');
+            filtered.forEach(acc => {
+                const card = document.createElement('div');
+                card.className = 'client-card';
+                card.onclick = () => showAccount(acc);
+
+                const date = parseLocalDate(acc.defaultDate);
+                const profCount = acc.profiles.filter(p => p !== null).length;
+
+                card.innerHTML = `
+                    <div class="card-info">
+                        <h3>${acc.accountName}</h3>
+                        <p>Compra Default: ${formatDate(date)}</p>
+                        <p style="font-size: 0.8rem; margin-top: 4px; color: #aaa;">
+                           ${profCount} / 5 Perfiles
+                        </p>
+                    </div>
+                    <i data-lucide="chevron-right" class="card-arrow"></i>
+                `;
+                accountListContainer.appendChild(card);
+            });
+        }
+        if (window.lucide) lucide.createIcons();
+    }
+
+
+    // === CREATE ACCOUNT LOGIC ===
+    if (addAccountBtn) {
+        addAccountBtn.addEventListener('click', () => {
+            openAccountModal();
+        });
+    }
+
+    function openAccountModal(account = null) {
+        modalAccountTitle.innerText = account ? 'Editar Cuenta' : 'Nueva Cuenta';
+        accountIdHidden.value = account ? account.id : '';
+        accountNameInput.value = account ? account.accountName : '';
+        accountDateInput.value = account ? account.defaultDate : new Date().toISOString().split('T')[0];
+        accountModal.classList.remove('hidden');
+    }
+
+    function closeAccountModalFn() {
+        accountModal.classList.add('hidden');
+        accountForm.reset();
+    }
+
+    closeAccountModal.addEventListener('click', closeAccountModalFn);
+    cancelAccountBtn.addEventListener('click', closeAccountModalFn);
+
+    accountForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = accountNameInput.value;
+        const date = accountDateInput.value;
+        const id = accountIdHidden.value;
+
+        if (id) {
+            // Edit Account Info Only
+            await updateDoc(doc(db, "cuentas", id), {
+                accountName: name,
+                defaultDate: date
+            });
+        } else {
+            // Create New
+            await addDoc(collection(db, "cuentas"), {
+                accountName: name,
+                defaultDate: date,
+                profiles: [null, null, null, null, null]
+            });
+        }
+        closeAccountModalFn();
     });
 
 
-    // Event Listeners
-    addClientBtn.addEventListener('click', () => {
-        openModal();
+    // === ACCOUNT DETAILS LOGIC ===
+    function showAccount(account) {
+        currentAccount = account;
+        renderAccountDetails(account);
+        toggleAccountEditMode(false);
+        goAccountView();
+    }
+
+    function renderAccountDetails(account) {
+        detailAccountName.innerText = account.accountName;
+        detailAccountDate.innerText = formatDate(parseLocalDate(account.defaultDate));
+
+        profilesList.innerHTML = '';
+
+        for (let i = 0; i < 5; i++) {
+            const profile = account.profiles[i];
+
+            const card = document.createElement('div');
+            card.className = 'profile-item';
+
+            if (profile) {
+                // Occupied
+                card.style.cursor = 'pointer';
+                card.onclick = () => showProfile(i);
+                card.innerHTML = `
+                    <div style="display:flex; align-items:center;">
+                        <span class="profile-index" style="background:var(--primary-color); color:white;">#${i + 1}</span>
+                        <div style="display:flex; flex-direction:column; margin-left:8px;">
+                            <span class="profile-number" style="font-weight:bold;">${profile.number}</span>
+                            <span style="font-size:0.75rem; color:#aaa;">${formatDate(parseLocalDate(profile.purchaseDate))}</span>
+                        </div>
+                    </div>
+                    <i data-lucide="chevron-right" style="width:16px; color:#666;"></i>
+                `;
+            } else {
+                // Empty
+                card.style.opacity = '0.7';
+                card.style.border = '1px dashed #555';
+                card.style.cursor = 'pointer';
+                card.onclick = () => openProfileModal(i);
+
+                card.innerHTML = `
+                    <div style="display:flex; align-items:center;">
+                         <span class="profile-index" style="background:#333; color:#777;">#${i + 1}</span>
+                         <span style="margin-left:10px; color:#777; font-style:italic;">Disponible</span>
+                    </div>
+                    <div style="background: var(--surface-light); padding: 5px; border-radius: 50%; display: flex;">
+                        <i data-lucide="plus" style="width:16px; height:16px; color:var(--primary-color);"></i>
+                    </div>
+                `;
+            }
+            profilesList.appendChild(card);
+        }
+
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function toggleAccountEditMode(isEditing) {
+        if (isEditing) {
+            editAccountBtn.classList.add('hidden');
+            editAccountActions.classList.remove('hidden');
+            editDetailAccountName.value = currentAccount.accountName;
+            editDetailAccountDate.value = currentAccount.defaultDate;
+            detailAccountName.classList.add('hidden');
+            detailAccountDate.classList.add('hidden');
+            editDetailAccountName.classList.remove('hidden');
+            editDetailAccountDate.classList.remove('hidden');
+        } else {
+            editAccountBtn.classList.remove('hidden');
+            editAccountActions.classList.add('hidden');
+            detailAccountName.classList.remove('hidden');
+            detailAccountDate.classList.remove('hidden');
+            editDetailAccountName.classList.add('hidden');
+            editDetailAccountDate.classList.add('hidden');
+        }
+    }
+
+    editAccountBtn.addEventListener('click', () => toggleAccountEditMode(true));
+    cancelAccountEditBtn.addEventListener('click', () => toggleAccountEditMode(false));
+
+    saveAccountEditBtn.addEventListener('click', async () => {
+        if (!currentAccount) return;
+        await updateDoc(doc(db, "cuentas", currentAccount.id), {
+            accountName: editDetailAccountName.value,
+            defaultDate: editDetailAccountDate.value
+        });
+        toggleAccountEditMode(false);
     });
 
-    closeModal.addEventListener('click', () => {
-        clientModal.classList.add('hidden');
+    deleteAccountBtn.addEventListener('click', async () => {
+        if (!currentAccount) return;
+        showConfirm("¿Eliminar Cuenta?", "Se borrarán todos los perfiles asociados. No se puede deshacer.", async () => {
+            await deleteDoc(doc(db, "cuentas", currentAccount.id));
+            // goHome handled by onSnapshot
+        });
     });
 
-    closeImageModal.addEventListener('click', () => {
-        imageModal.classList.add('hidden');
+
+    // === CUSTOM CONFIRM MODAL ===
+    const customConfirmModal = document.getElementById('customConfirmModal');
+    const confirmTitle = document.getElementById('confirmTitle');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const btnConfirmCancel = document.getElementById('btnConfirmCancel');
+    const btnConfirmOk = document.getElementById('btnConfirmOk');
+
+    let confirmCallback = null;
+
+    function showConfirm(title, message, onConfirm) {
+        confirmTitle.innerText = title;
+        confirmMessage.innerText = message;
+        confirmCallback = onConfirm;
+        customConfirmModal.classList.add('active');
+    }
+
+    function closeConfirm() {
+        customConfirmModal.classList.remove('active');
+        confirmCallback = null;
+    }
+
+    btnConfirmCancel.addEventListener('click', closeConfirm);
+
+    btnConfirmOk.addEventListener('click', () => {
+        if (confirmCallback) confirmCallback();
+        closeConfirm();
     });
 
-    removeImageBtn.addEventListener('click', () => {
-        currentImageBase64 = null;
-        imagePreview.src = '';
-        imagePreviewContainer.classList.add('hidden');
-        paymentProofInput.value = '';
-    });
 
-    paymentProofInput.addEventListener('change', (e) => {
+    // === ADD/EDIT PROFILE MODAL LOGIC ===
+    function openProfileModal(slotIndex) {
+        currentProfileIndex = slotIndex; // The slot attempting to add to (e.g., clicked empty slot #3)
+
+        profileForm.reset();
+        tempProfileImageBase64 = null;
+        profileImagePreviewContainer.classList.add('hidden');
+
+        profileDateInput.value = currentAccount.defaultDate;
+
+        modalProfileTitle.innerText = `Nuevo Perfil`;
+
+        // Default select to the clicked slot
+        const slotSelect = document.getElementById('profileSlotSelect');
+        if (slotSelect) slotSelect.value = slotIndex.toString();
+
+        profileModal.classList.remove('hidden');
+    }
+
+    function closeProfileModalFn() {
+        profileModal.classList.add('hidden');
+    }
+
+    closeProfileModal.addEventListener('click', closeProfileModalFn);
+    cancelProfileBtn.addEventListener('click', closeProfileModalFn);
+
+    profilePaymentProof.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                currentImageBase64 = reader.result;
-                imagePreview.src = currentImageBase64;
-                imagePreviewContainer.classList.remove('hidden');
+                tempProfileImageBase64 = reader.result;
+                profileImagePreview.src = tempProfileImageBase64;
+                profileImagePreviewContainer.classList.remove('hidden');
             };
             reader.readAsDataURL(file);
         }
     });
 
-    clientForm.addEventListener('submit', async (e) => {
+    removeProfileImageBtn.addEventListener('click', () => {
+        tempProfileImageBase64 = null;
+        profileImagePreview.src = "";
+        profileImagePreviewContainer.classList.add('hidden');
+        profilePaymentProof.value = "";
+    });
+
+    profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const number = profileNumberInput.value;
+        const date = profileDateInput.value;
 
-        const id = document.getElementById('clientId').value;
-        const userNumber = document.getElementById('userNumber').value;
-        const profilesCount = document.getElementById('profilesCount').value;
-        const purchaseDate = document.getElementById('purchaseDate').value;
+        // Get the desired Target Slot from dropdown
+        const slotSelect = document.getElementById('profileSlotSelect');
+        const targetSlotIndex = parseInt(slotSelect.value); // 0-4
 
-        const clientData = {
-            userNumber,
-            profilesCount,
-            purchaseDate,
-            paymentProof: currentImageBase64 // guardamos base64 directo
+        const newProfileData = {
+            id: Date.now().toString(),
+            number: number,
+            purchaseDate: date,
+            paymentProof: tempProfileImageBase64
         };
 
-        if (id) {
-            await updateDoc(doc(db, "clientes", id), clientData);
+        const newProfiles = [...currentAccount.profiles];
+
+        // Logic:
+        // We started at 'currentProfileIndex' (the empty slot we clicked).
+        // User wants to put it in 'targetSlotIndex'.
+
+        if (targetSlotIndex === currentProfileIndex) {
+            // Standard case: Put in the slot we clicked
+            newProfiles[targetSlotIndex] = newProfileData;
         } else {
-            await addDoc(collection(db, "clientes"), clientData);
+            // Swap Case:
+            // Put NEW profile in TARGET slot.
+            // Move WHATEVER was in TARGET slot (null or profile) to CURRENT slot.
+            const existingInTarget = newProfiles[targetSlotIndex];
+            newProfiles[targetSlotIndex] = newProfileData;
+            newProfiles[currentProfileIndex] = existingInTarget;
         }
 
-        clientModal.classList.add('hidden');
-        location.reload();
-    });
-
-
-
-    // Search
-    searchInput.addEventListener('input', (e) => {
-        const term = e.target.value.toLowerCase();
-        // Filtra los clientes comparando el término de búsqueda con el userNumber
-        const filtered = allClients.filter(c => c.userNumber.toString().toLowerCase().includes(term));
-        renderClientList(filtered);
-    });
-
-    // Navigation
-    backBtn.addEventListener('click', () => {
-        toggleEditMode(false);
-        clientDetailsView.classList.add('hidden');
-        dashboardView.classList.remove('hidden');
-    });
-
-    editClientBtn.addEventListener('click', () => {
-        toggleEditMode(true);
-    });
-
-    saveEditBtn.addEventListener('click', () => {
-        if (!currentDetailClientId) return;
-        const client = allClients.find(c => c.id === currentDetailClientId);
-
-        const updatedClient = {
-            ...client,
-            userNumber: editDetailUserNumber.value,
-            profilesCount: editDetailProfiles.value,
-            purchaseDate: editDetailPurchaseDate.value
-        };
-
-        const index = allClients.findIndex(c => c.id === currentDetailClientId);
-        allClients[index] = updatedClient;
-
-        refreshView();
-        showClientDetails(updatedClient);
-        toggleEditMode(false);
-    });
-
-    cancelEditBtn.addEventListener('click', () => {
-        toggleEditMode(false);
-    });
-
-    deleteClientBtn.addEventListener('click', async () => {
-        if (!currentDetailClientId) return;
-
-        if (confirm('¿Seguro que quieres eliminar este cliente?')) {
-            await deleteDoc(doc(db, "clientes", currentDetailClientId));
-            // Forzamos la recarga al inicio de forma agresiva
-            window.location.replace(window.location.pathname);
-        }
-    });
-
-
-
-    function toggleEditMode(isEditing) {
-        if (isEditing) {
-            editClientBtn.classList.add('hidden');
-            editActions.classList.remove('hidden');
-
-            const client = allClients.find(c => c.id === currentDetailClientId);
-            editDetailUserNumber.value = client.userNumber;
-            editDetailProfiles.value = client.profilesCount;
-            editDetailPurchaseDate.value = client.purchaseDate;
-
-            viewModes.forEach(el => el.classList.add('hidden'));
-            editModes.forEach(el => el.classList.remove('hidden'));
-        } else {
-            editClientBtn.classList.remove('hidden');
-            editActions.classList.add('hidden');
-            viewModes.forEach(el => el.classList.remove('hidden'));
-            editModes.forEach(el => el.classList.add('hidden'));
-        }
-    }
-
-    detailPaymentImage.addEventListener('click', () => {
-        fullImage.src = detailPaymentImage.src;
-        imageModal.classList.remove('hidden');
-    });
-
-    // Functions
-    function refreshView() {
-        allClients.sort((a, b) => parseLocalDate(b.purchaseDate) - parseLocalDate(a.purchaseDate));
-        renderClientList(allClients);
-    }
-
-    function renderClientList(clients) {
-        clientListContainer.innerHTML = '';
-        if (clients.length === 0) {
-            document.getElementById('emptyState').classList.remove('hidden');
-            return;
-        }
-        document.getElementById('emptyState').classList.add('hidden');
-
-        clients.forEach(client => {
-            const card = document.createElement('div');
-            card.className = 'client-card';
-            card.onclick = () => showClientDetails(client);
-
-            const purchaseDate = parseLocalDate(client.purchaseDate);
-
-            card.innerHTML = `
-                <div class="card-info">
-                    <h3>${client.userNumber}</h3>
-                    <p>Comprado el: ${formatDate(purchaseDate)}</p>
-                </div>
-                <i data-lucide="chevron-right" class="card-arrow"></i>
-            `;
-            clientListContainer.appendChild(card);
+        await updateDoc(doc(db, "cuentas", currentAccount.id), {
+            profiles: newProfiles
         });
 
-        if (window.lucide) lucide.createIcons();
+        closeProfileModalFn();
+        // No reload needed; onSnapshot updates UI
+    });
+
+
+    // === PROFILE DETAILS VIEW (Edit/Delete) ===
+    function showProfile(index) {
+        currentProfileIndex = index;
+        const profile = currentAccount.profiles[index];
+        if (!profile) return;
+
+        renderProfileDetails(currentAccount, index);
+        toggleProfileEditMode(false);
+        goProfileView();
     }
 
-    function showClientDetails(client) {
-        currentDetailClientId = client.id;
-        toggleEditMode(false);
+    function renderProfileDetails(account, index) {
+        const profile = account.profiles[index];
+        // Safety check if profile disappeared (e.g. swapped out while viewing?)
+        if (!profile) return;
 
-        detailUserNumber.innerText = client.userNumber;
-        detailProfiles.innerText = client.profilesCount;
+        // Show Slot info
+        const detailProfileSlot = document.getElementById('detailProfileSlot');
+        if (detailProfileSlot) detailProfileSlot.innerText = `Perfil #${index + 1}`;
 
-        const purchase = parseLocalDate(client.purchaseDate);
-        detailPurchaseDate.innerText = formatDate(purchase);
+        // Pre-set select value for edit mode
+        const editDetailProfileSlot = document.getElementById('editDetailProfileSlot');
+        if (editDetailProfileSlot) editDetailProfileSlot.value = index.toString();
 
+        detailProfileNumber.innerText = profile.number;
+        detailProfileDate.innerText = formatDate(parseLocalDate(profile.purchaseDate));
+
+        // Status
+        const purchase = parseLocalDate(profile.purchaseDate);
         const expDate = new Date(purchase); expDate.setDate(purchase.getDate() + 30);
         const refundDate = new Date(purchase); refundDate.setDate(purchase.getDate() + 10);
         const supportDate = new Date(purchase); supportDate.setDate(purchase.getDate() + 20);
 
-        const expRemaining = getDaysFromNow(expDate);
-        const refundRemaining = getDaysFromNow(refundDate);
-        const supportRemaining = getDaysFromNow(supportDate);
+        setStatus(profileExp, getDaysFromNow(expDate));
+        setStatus(profileRefund, getDaysFromNow(refundDate));
+        setStatus(profileSupport, getDaysFromNow(supportDate));
 
-        setStatus(detailExp, expRemaining);
-        setStatus(detailRefund, refundRemaining);
-        setStatus(detailSupport, supportRemaining);
-
-        if (client.paymentProof) {
-            detailPaymentImage.src = client.paymentProof;
+        // Image
+        if (profile.paymentProof) {
+            detailPaymentImage.src = profile.paymentProof;
             detailPaymentImage.classList.remove('hidden');
             detailNoPayment.classList.add('hidden');
         } else {
             detailPaymentImage.classList.add('hidden');
             detailNoPayment.classList.remove('hidden');
         }
-
-        dashboardView.classList.add('hidden');
-        clientDetailsView.classList.remove('hidden');
-        if (window.lucide) lucide.createIcons();
     }
 
-    function openModal(client = null) {
-        document.getElementById('modalTitle').innerText = client ? 'Editar Cliente' : 'Nuevo Cliente';
-        document.getElementById('clientId').value = client ? client.id : '';
-        document.getElementById('userNumber').value = client ? client.userNumber : '';
-        document.getElementById('profilesCount').value = client ? client.profilesCount : '1';
-        document.getElementById('purchaseDate').value = client ? client.purchaseDate : new Date().toISOString().split('T')[0];
+    function toggleProfileEditMode(isEditing) {
+        if (isEditing) {
+            editProfileBtn.classList.add('hidden');
+            editProfileActions.classList.remove('hidden');
 
-        currentImageBase64 = client ? client.paymentProof : null;
-        if (currentImageBase64) {
-            imagePreview.src = currentImageBase64;
-            imagePreviewContainer.classList.remove('hidden');
+            const profile = currentAccount.profiles[currentProfileIndex];
+            editDetailProfileNumber.value = profile.number;
+            editDetailProfileDate.value = profile.purchaseDate;
+            tempEditProfileImageBase64 = profile.paymentProof;
+
+            // Toggle Slot Selector
+            const detailProfileSlot = document.getElementById('detailProfileSlot');
+            const editDetailProfileSlot = document.getElementById('editDetailProfileSlot');
+            if (detailProfileSlot) detailProfileSlot.classList.add('hidden');
+            if (editDetailProfileSlot) editDetailProfileSlot.classList.remove('hidden');
+
+            detailProfileNumber.classList.add('hidden');
+            detailProfileDate.classList.add('hidden');
+            editDetailProfileNumber.classList.remove('hidden');
+            editDetailProfileDate.classList.remove('hidden');
+            editProfileImageContainer.classList.remove('hidden');
         } else {
-            imagePreviewContainer.classList.add('hidden');
-            paymentProofInput.value = '';
+            editProfileBtn.classList.remove('hidden');
+            editProfileActions.classList.add('hidden');
+
+            const detailProfileSlot = document.getElementById('detailProfileSlot');
+            const editDetailProfileSlot = document.getElementById('editDetailProfileSlot');
+            if (detailProfileSlot) detailProfileSlot.classList.remove('hidden');
+            if (editDetailProfileSlot) editDetailProfileSlot.classList.add('hidden');
+
+            detailProfileNumber.classList.remove('hidden');
+            detailProfileDate.classList.remove('hidden');
+            editDetailProfileNumber.classList.add('hidden');
+            editDetailProfileDate.classList.add('hidden');
+            editProfileImageContainer.classList.add('hidden');
+        }
+    }
+
+    editProfileBtn.addEventListener('click', () => toggleProfileEditMode(true));
+    cancelProfileEditBtn.addEventListener('click', () => toggleProfileEditMode(false));
+
+    editPaymentProof.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                tempEditProfileImageBase64 = reader.result;
+                detailPaymentImage.src = tempEditProfileImageBase64;
+                detailPaymentImage.classList.remove('hidden');
+                detailNoPayment.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    saveProfileEditBtn.addEventListener('click', async () => {
+        // Get target slot from dropdown
+        const editDetailProfileSlot = document.getElementById('editDetailProfileSlot');
+        const targetSlotIndex = parseInt(editDetailProfileSlot.value);
+
+        const updatedProfile = {
+            ...currentAccount.profiles[currentProfileIndex],
+            number: editDetailProfileNumber.value,
+            purchaseDate: editDetailProfileDate.value,
+            paymentProof: tempEditProfileImageBase64
+        };
+
+        const newProfiles = [...currentAccount.profiles];
+
+        if (targetSlotIndex === currentProfileIndex) {
+            newProfiles[currentProfileIndex] = updatedProfile;
+        } else {
+            // Swap Logic
+            const otherProfile = newProfiles[targetSlotIndex];
+            newProfiles[targetSlotIndex] = updatedProfile;
+            newProfiles[currentProfileIndex] = otherProfile;
+
+            // IMPORTANT: If we moved OUR profile to a new slot, 
+            // we must update 'currentProfileIndex' so the MAIN VIEW keeps following it.
+            currentProfileIndex = targetSlotIndex;
         }
 
-        clientModal.classList.remove('hidden');
-        if (window.lucide) lucide.createIcons();
-    }
+        await updateDoc(doc(db, "cuentas", currentAccount.id), {
+            profiles: newProfiles
+        });
 
+        toggleProfileEditMode(false);
+        // No reload needed. OnSnapshot will receive the update.
+        // If we swapped, 'currentProfileIndex' is already updated above, 
+        // ensuring renderProfileDetails(..., currentProfileIndex) shows the correct (moved) profile.
+    });
+
+    deleteProfileBtn.addEventListener('click', async () => {
+        showConfirm("¿Eliminar Perfil?", "El espacio quedará libre. Esta acción no se puede deshacer.", async () => {
+            const newProfiles = [...currentAccount.profiles];
+            newProfiles[currentProfileIndex] = null;
+
+            await updateDoc(doc(db, "cuentas", currentAccount.id), {
+                profiles: newProfiles
+            });
+            // Firestore update triggers listener
+            // Listener says: if(updated.profiles[currentProfileIndex]) is null -> goBackToAccount
+            // So logic is already handled!
+        });
+    });
+
+    detailPaymentImage.addEventListener('click', () => {
+        fullImage.src = detailPaymentImage.src;
+        imageModal.classList.remove('hidden');
+    });
+    closeImageModal.addEventListener('click', () => imageModal.classList.add('hidden'));
+
+
+    // === UTILS ===
     function parseLocalDate(dateString) {
         if (!dateString) return new Date();
         const [year, month, day] = dateString.split('-').map(Number);
@@ -307,17 +654,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function setStatus(element, days) {
         let text = `${days} días`;
         let statusClass = 'status-active';
-
-        if (days < 0) {
-            text = 'Expirado';
-            statusClass = 'status-expired';
-        } else if (days === 0) {
-            text = 'Vence Hoy';
-            statusClass = 'status-warning';
-        } else if (days <= 3) {
-            statusClass = 'status-warning';
-        }
-
+        if (days < 0) { text = 'Expirado'; statusClass = 'status-expired'; }
+        else if (days === 0) { text = 'Vence Hoy'; statusClass = 'status-warning'; }
+        else if (days <= 3) { statusClass = 'status-warning'; }
         element.innerText = text;
         element.className = `status-value ${statusClass}`;
     }
