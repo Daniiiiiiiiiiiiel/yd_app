@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 card.innerHTML = `
                     <div class="card-info">
                         <h3>${acc.accountName}</h3>
-                        <p>Compra Default: ${formatDate(date)}</p>
+                        <p>Fecha Compra: ${formatDate(date)}</p>
                         <p style="font-size: 0.8rem; margin-top: 4px; color: #aaa;">
                            ${profCount} / 5 Perfiles
                         </p>
@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 card.innerHTML = `
                     <div style="display:flex; align-items:center;">
-                         <span class="profile-index" style="background:#333; color:#777;">#${i + 1}</span>
+                         <span class="profile-index" style="background:transparent; color:#555;">#${i + 1}</span>
                          <span style="margin-left:10px; color:#777; font-style:italic;">Disponible</span>
                     </div>
                     <div style="background: var(--surface-light); padding: 5px; border-radius: 50%; display: flex;">
