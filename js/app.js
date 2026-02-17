@@ -361,8 +361,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="display:flex; align-items:center;">
                         <span class="profile-index" style="background:var(--primary-color); color:white;">#${i + 1}</span>
                         <div style="display:flex; flex-direction:column; margin-left:8px;">
-                            <span class="profile-number" style="font-weight:bold;">${profile.number} ${profile.name ? `- ${profile.name}` : ''}</span>
-                            <span style="font-size:0.75rem; color:#aaa;">${formatDate(parseLocalDate(profile.purchaseDate))}</span>
+                            <span class="profile-name" style="font-weight:bold; color:var(--text-white); font-size:0.95rem;">${profile.name || 'Sin nombre'}</span>
+                            <span class="profile-number" style="font-size:0.8rem; color:#aaa;">${profile.number}</span>
+                            <span style="font-size:0.7rem; color:#777;">${formatDate(parseLocalDate(profile.purchaseDate))}</span>
                         </div>
                     </div>
                     <div style="display:flex; align-items:center;">
