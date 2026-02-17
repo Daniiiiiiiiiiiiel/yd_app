@@ -77,6 +77,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeImageModal = document.getElementById('closeImageModal');
     const fullImage = document.getElementById('fullImage');
 
+    // === NEW PAYMENT ELEMENTS ===
+    const profilePaymentMethod = document.getElementById('profilePaymentMethod');
+    const profileDigitalContent = document.getElementById('profileDigitalContent');
+    const editProfilePaymentMethod = document.getElementById('editProfilePaymentMethod');
+    const editProfileMethodContainer = document.getElementById('editProfileMethodContainer');
+    const detailPhysicalPayment = document.getElementById('detailPhysicalPayment');
+
 
     // === STATE ===
     let allAccounts = [];
@@ -398,6 +405,10 @@ document.addEventListener('DOMContentLoaded', () => {
         tempProfileImageBase64 = null;
         profileImagePreviewContainer.classList.add('hidden');
 
+        // Defaults
+        if (profilePaymentMethod) profilePaymentMethod.value = 'digital';
+        if (profileDigitalContent) profileDigitalContent.classList.remove('hidden');
+
         profileDateInput.value = currentAccount.defaultDate;
 
         modalProfileTitle.innerText = `Nuevo Perfil`;
@@ -415,6 +426,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     closeProfileModal.addEventListener('click', closeProfileModalFn);
     cancelProfileBtn.addEventListener('click', closeProfileModalFn);
+
+    // Toggle content based on selection
+    if (profilePaymentMethod) {
+        profilePaymentMethod.addEventListener('change', (e) => {
+            if (e.target.value === 'physical') {
+                profileDigitalContent.classList.add('hidden');
+            } else {
+                profileDigitalContent.classList.remove('hidden');
+            }
+        });
+    }
 
     profilePaymentProof.addEventListener('change', (e) => {
         const file = e.target.files[0];
@@ -440,16 +462,24 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const number = profileNumberInput.value;
         const date = profileDateInput.value;
+        const method = profilePaymentMethod ? profilePaymentMethod.value : 'digital';
 
         // Get the desired Target Slot from dropdown
         const slotSelect = document.getElementById('profileSlotSelect');
         const targetSlotIndex = parseInt(slotSelect.value); // 0-4
 
+        let finalProof = null;
+        if (method === 'physical') {
+            finalProof = "PHYSICAL_PAYMENT";
+        } else {
+            finalProof = tempProfileImageBase64;
+        }
+
         const newProfileData = {
             id: Date.now().toString(),
             number: number,
             purchaseDate: date,
-            paymentProof: tempProfileImageBase64
+            paymentProof: finalProof
         };
 
         const newProfiles = [...currentAccount.profiles];
@@ -516,14 +546,25 @@ document.addEventListener('DOMContentLoaded', () => {
         setStatus(profileRefund, getDaysFromNow(refundDate));
         setStatus(profileSupport, getDaysFromNow(supportDate));
 
-        // Image
-        if (profile.paymentProof) {
-            detailPaymentImage.src = profile.paymentProof;
-            detailPaymentImage.classList.remove('hidden');
-            detailNoPayment.classList.add('hidden');
+        // Image or Physical View
+        if (profile.paymentProof === "PHYSICAL_PAYMENT") {
+            // Show Physical Card
+            if (detailPaymentImage) detailPaymentImage.classList.add('hidden');
+            if (detailNoPayment) detailNoPayment.classList.add('hidden');
+            if (detailPhysicalPayment) detailPhysicalPayment.classList.remove('hidden');
+        } else if (profile.paymentProof) {
+            // Show Digital Image
+            if (detailPaymentImage) {
+                detailPaymentImage.src = profile.paymentProof;
+                detailPaymentImage.classList.remove('hidden');
+            }
+            if (detailNoPayment) detailNoPayment.classList.add('hidden');
+            if (detailPhysicalPayment) detailPhysicalPayment.classList.add('hidden');
         } else {
-            detailPaymentImage.classList.add('hidden');
-            detailNoPayment.classList.remove('hidden');
+            // Nothing
+            if (detailPaymentImage) detailPaymentImage.classList.add('hidden');
+            if (detailPhysicalPayment) detailPhysicalPayment.classList.add('hidden');
+            if (detailNoPayment) detailNoPayment.classList.remove('hidden');
         }
     }
 
@@ -547,7 +588,19 @@ document.addEventListener('DOMContentLoaded', () => {
             detailProfileDate.classList.add('hidden');
             editDetailProfileNumber.classList.remove('hidden');
             editDetailProfileDate.classList.remove('hidden');
-            editProfileImageContainer.classList.remove('hidden');
+
+            // Toggle Method Selector
+            if (editProfileMethodContainer) editProfileMethodContainer.classList.remove('hidden');
+
+            // Decide initial state of inputs based on current proof
+            if (profile.paymentProof === "PHYSICAL_PAYMENT") {
+                editProfilePaymentMethod.value = "physical";
+                editProfileImageContainer.classList.add('hidden');
+            } else {
+                editProfilePaymentMethod.value = "digital";
+                editProfileImageContainer.classList.remove('hidden');
+            }
+
         } else {
             editProfileBtn.classList.remove('hidden');
             editProfileActions.classList.add('hidden');
@@ -561,12 +614,25 @@ document.addEventListener('DOMContentLoaded', () => {
             detailProfileDate.classList.remove('hidden');
             editDetailProfileNumber.classList.add('hidden');
             editDetailProfileDate.classList.add('hidden');
+
+            if (editProfileMethodContainer) editProfileMethodContainer.classList.add('hidden');
             editProfileImageContainer.classList.add('hidden');
         }
     }
 
     editProfileBtn.addEventListener('click', () => toggleProfileEditMode(true));
     cancelProfileEditBtn.addEventListener('click', () => toggleProfileEditMode(false));
+
+    // Handle change in Edit Mode
+    if (editProfilePaymentMethod) {
+        editProfilePaymentMethod.addEventListener('change', (e) => {
+            if (e.target.value === 'physical') {
+                editProfileImageContainer.classList.add('hidden');
+            } else {
+                editProfileImageContainer.classList.remove('hidden');
+            }
+        });
+    }
 
     editPaymentProof.addEventListener('change', (e) => {
         const file = e.target.files[0];
@@ -576,7 +642,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 tempEditProfileImageBase64 = reader.result;
                 detailPaymentImage.src = tempEditProfileImageBase64;
                 detailPaymentImage.classList.remove('hidden');
-                detailNoPayment.classList.add('hidden');
+                if (detailNoPayment) detailNoPayment.classList.add('hidden');
+                if (detailPhysicalPayment) detailPhysicalPayment.classList.add('hidden'); // Hide physical if previewing
             };
             reader.readAsDataURL(file);
         }
@@ -586,12 +653,28 @@ document.addEventListener('DOMContentLoaded', () => {
         // Get target slot from dropdown
         const editDetailProfileSlot = document.getElementById('editDetailProfileSlot');
         const targetSlotIndex = parseInt(editDetailProfileSlot.value);
+        const method = editProfilePaymentMethod ? editProfilePaymentMethod.value : 'digital';
+
+        let finalProof = null;
+        if (method === 'physical') {
+            finalProof = "PHYSICAL_PAYMENT";
+        } else {
+            // Digital logic
+            if (tempEditProfileImageBase64 === "PHYSICAL_PAYMENT") {
+                // If it was physical, and we switched to digital but didn't upload...
+                // Ideally this shouldn't happen if UI forces upload, but let's assume null.
+                // Or maybe we should keep it null.
+                finalProof = null;
+            } else {
+                finalProof = tempEditProfileImageBase64;
+            }
+        }
 
         const updatedProfile = {
             ...currentAccount.profiles[currentProfileIndex],
             number: editDetailProfileNumber.value,
             purchaseDate: editDetailProfileDate.value,
-            paymentProof: tempEditProfileImageBase64
+            paymentProof: finalProof
         };
 
         const newProfiles = [...currentAccount.profiles];

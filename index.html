@@ -179,6 +179,16 @@
 
                 <div class="detail-card">
                     <h3>Comprobante de Pago</h3>
+                    <!-- Edit Mode: Method Selector -->
+                    <div id="editProfileMethodContainer" class="hidden" style="margin-bottom: 1rem;">
+                        <label class="detail-label" style="display:block; margin-bottom:0.5rem;">Método de Pago:</label>
+                        <select id="editProfilePaymentMethod" class="detail-input"
+                            style="width:100%; text-align:left; background-color: var(--surface-light);">
+                            <option value="digital">Comprobante Digital</option>
+                            <option value="physical">Pago Físico</option>
+                        </select>
+                    </div>
+
                     <!-- Edit Image Uploader (Hidden by default) -->
                     <div id="editProfileImageContainer" class="hidden" style="margin-bottom: 1rem;">
                         <div class="file-upload-wrapper">
@@ -191,6 +201,16 @@
 
                     <div id="detailPaymentContainer">
                         <img id="detailPaymentImage" src="" alt="Comprobante" class="detail-image hidden">
+
+                        <div id="detailPhysicalPayment" class="hidden"
+                            style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; text-align: center; border: 1px dashed var(--border-color); margin-top: 0.75rem;">
+                            <i data-lucide="banknote"
+                                style="width: 48px; height: 48px; color: var(--success); margin-bottom: 0.5rem;"></i>
+                            <p style="margin: 0; color: var(--text-white); font-weight: 600;">Pago Físico</p>
+                            <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.85rem;">Registrado como
+                                efectivo/físico</p>
+                        </div>
+
                         <p id="detailNoPayment" class="text-muted hidden">No hay comprobante.</p>
                     </div>
                 </div>
@@ -271,18 +291,29 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Comprobante de Pago</label>
-                    <div class="file-upload-wrapper">
-                        <label for="profilePaymentProof" class="file-upload-btn">
-                            <i data-lucide="camera"></i> Subir Imagen
-                        </label>
-                        <input type="file" id="profilePaymentProof" accept="image/*" class="hidden">
-                    </div>
-                    <div id="profileImagePreviewContainer" class="hidden image-preview-box">
-                        <img id="profileImagePreview" src="" alt="Preview">
-                        <button type="button" id="removeProfileImageBtn" class="remove-img-btn">
-                            <i data-lucide="trash-2"></i>
-                        </button>
+                    <label class="form-label">Método de Pago</label>
+                    <select id="profilePaymentMethod" class="form-input"
+                        style="background-color: var(--surface-light);">
+                        <option value="digital">Comprobante Digital</option>
+                        <option value="physical">Pago Físico</option>
+                    </select>
+                </div>
+
+                <div id="profileDigitalContent">
+                    <div class="form-group">
+                        <label class="form-label">Comprobante de Pago</label>
+                        <div class="file-upload-wrapper">
+                            <label for="profilePaymentProof" class="file-upload-btn">
+                                <i data-lucide="camera"></i> Subir Imagen
+                            </label>
+                            <input type="file" id="profilePaymentProof" accept="image/*" class="hidden">
+                        </div>
+                        <div id="profileImagePreviewContainer" class="hidden image-preview-box">
+                            <img id="profileImagePreview" src="" alt="Preview">
+                            <button type="button" id="removeProfileImageBtn" class="remove-img-btn">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
