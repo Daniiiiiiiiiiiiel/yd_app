@@ -56,6 +56,36 @@ header {
     align-items: center;
     max-width: 800px;
     margin: 0 auto;
+    gap: 10px;
+}
+
+.total-profit-header {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 120px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.profit-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.profit-value {
+    font-size: 1rem;
+    font-weight: 900;
+    color: #4cc9f0;
+    /* Default color */
+    text-shadow: 0 0 10px rgba(76, 201, 240, 0.3);
 }
 
 .logo-container {
@@ -217,10 +247,13 @@ main {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    cursor: pointer;
-    box-shadow: var(--shadow-md);
-    border: 1px solid var(--border-color);
-    transition: opacity 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.client-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+    border-color: rgba(230, 57, 70, 0.4);
 }
 
 
@@ -245,6 +278,16 @@ main {
     color: var(--primary-red);
     width: 24px;
     height: 24px;
+}
+
+.card-profit {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* ========== DETAILED VIEW ========== */

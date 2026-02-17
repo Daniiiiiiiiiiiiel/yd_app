@@ -18,17 +18,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeAccountModal = document.getElementById('closeAccountModal');
     const accountForm = document.getElementById('accountForm');
     const accountNameInput = document.getElementById('accountNameInput');
+    const accountEmailInput = document.getElementById('accountEmailInput');
+    const accountPasswordInput = document.getElementById('accountPasswordInput');
     const accountDateInput = document.getElementById('accountDateInput');
+    const accountCostInput = document.getElementById('accountCostInput');
     const cancelAccountBtn = document.getElementById('cancelAccountBtn');
     const accountIdHidden = document.getElementById('accountId');
     const modalAccountTitle = document.getElementById('modalAccountTitle');
+
+    const totalProfitValue = document.getElementById('totalProfitValue');
 
     // === PROFILE MODAL ELEMENTS ===
     const profileModal = document.getElementById('profileModal');
     const closeProfileModal = document.getElementById('closeProfileModal');
     const profileForm = document.getElementById('profileForm');
     const profileNumberInput = document.getElementById('profileNumberInput');
+    const profileUserNameInput = document.getElementById('profileUserNameInput');
     const profileDateInput = document.getElementById('profileDateInput');
+    const profilePinInput = document.getElementById('profilePinInput');
     const profilePaymentProof = document.getElementById('profilePaymentProof');
     const profileImagePreview = document.getElementById('profileImagePreview');
     const profileImagePreviewContainer = document.getElementById('profileImagePreviewContainer');
@@ -45,9 +52,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteAccountBtn = document.getElementById('deleteAccountBtn');
 
     const detailAccountName = document.getElementById('detailAccountName');
+    const detailAccountEmail = document.getElementById('detailAccountEmail');
+    const detailAccountPassword = document.getElementById('detailAccountPassword');
     const detailAccountDate = document.getElementById('detailAccountDate');
+    const detailAccountCost = document.getElementById('detailAccountCost');
+    const detailAccountProfit = document.getElementById('detailAccountProfit');
     const editDetailAccountName = document.getElementById('editDetailAccountName');
+    const editDetailAccountEmail = document.getElementById('editDetailAccountEmail');
+    const editDetailAccountPassword = document.getElementById('editDetailAccountPassword');
     const editDetailAccountDate = document.getElementById('editDetailAccountDate');
+    const editDetailAccountCost = document.getElementById('editDetailAccountCost');
 
     const profilesList = document.getElementById('profilesList');
 
@@ -60,9 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteProfileBtn = document.getElementById('deleteProfileBtn');
 
     const detailProfileNumber = document.getElementById('detailProfileNumber');
+    const detailProfileUserName = document.getElementById('detailProfileUserName');
     const detailProfileDate = document.getElementById('detailProfileDate');
+    const detailProfilePin = document.getElementById('detailProfilePin');
     const editDetailProfileNumber = document.getElementById('editDetailProfileNumber');
+    const editDetailProfileUserName = document.getElementById('editDetailProfileUserName');
     const editDetailProfileDate = document.getElementById('editDetailProfileDate');
+    const editDetailProfilePin = document.getElementById('editDetailProfilePin');
 
     const profileExp = document.getElementById('profileExp');
     const profileRefund = document.getElementById('profileRefund');
@@ -109,10 +127,14 @@ document.addEventListener('DOMContentLoaded', () => {
             allAccounts.push({
                 id: docSnap.id,
                 accountName: data.accountName || "",
+                email: data.email || "",
+                password: data.password || "",
                 defaultDate: data.defaultDate || "",
+                cost: parseFloat(data.cost) || 0,
                 profiles: profilesFixed
             });
         });
+        updateTotalProfit();
         refreshDashboard();
 
         // Handle Active Account Updates
@@ -160,6 +182,19 @@ document.addEventListener('DOMContentLoaded', () => {
         closeProfileModalFn();
     }
 
+    function updateTotalProfit() {
+        let total = 0;
+        allAccounts.forEach(acc => {
+            const profCount = acc.profiles.filter(p => p !== null).length;
+            const profit = (profCount * 1500) - acc.cost;
+            total += profit;
+        });
+        if (totalProfitValue) {
+            totalProfitValue.innerText = `₡${total.toLocaleString()}`;
+            totalProfitValue.style.color = total >= 0 ? '#4cc9f0' : '#e63946';
+        }
+    }
+
     function goAccountView() {
         dashboardView.classList.add('hidden');
         accountDetailsView.classList.remove('hidden');
@@ -205,14 +240,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const date = parseLocalDate(acc.defaultDate);
                 const profCount = acc.profiles.filter(p => p !== null).length;
+                const profit = (profCount * 1500) - acc.cost;
+                const profitColor = profit >= 0 ? '#2ecc71' : '#e63946';
 
                 card.innerHTML = `
                     <div class="card-info">
                         <h3>${acc.accountName}</h3>
                         <p>Fecha Compra: ${formatDate(date)}</p>
                         <p style="font-size: 0.8rem; margin-top: 4px; color: #aaa;">
-                           ${profCount} / 5 Perfiles
+                           ${profCount} / 5 Perfiles | Costo: ₡${acc.cost.toLocaleString()}
                         </p>
+                    </div>
+                    <div class="card-profit" style="text-align: right; margin-right: 15px;">
+                        <span style="font-weight: bold; color: ${profitColor}; display: block;">
+                            ${profit >= 0 ? '+' : ''}₡${profit.toLocaleString()}
+                        </span>
+                        <span style="font-size: 0.7rem; color: #888;">Ganancia</span>
                     </div>
                     <i data-lucide="chevron-right" class="card-arrow"></i>
                 `;
@@ -234,7 +277,10 @@ document.addEventListener('DOMContentLoaded', () => {
         modalAccountTitle.innerText = account ? 'Editar Cuenta' : 'Nueva Cuenta';
         accountIdHidden.value = account ? account.id : '';
         accountNameInput.value = account ? account.accountName : '';
+        accountEmailInput.value = account ? (account.email || '') : '';
+        accountPasswordInput.value = account ? (account.password || '') : '';
         accountDateInput.value = account ? account.defaultDate : new Date().toISOString().split('T')[0];
+        accountCostInput.value = account ? account.cost : '';
         accountModal.classList.remove('hidden');
     }
 
@@ -249,20 +295,29 @@ document.addEventListener('DOMContentLoaded', () => {
     accountForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = accountNameInput.value;
+        const email = accountEmailInput.value;
+        const password = accountPasswordInput.value;
         const date = accountDateInput.value;
+        const cost = parseFloat(accountCostInput.value) || 0;
         const id = accountIdHidden.value;
 
         if (id) {
             // Edit Account Info Only
             await updateDoc(doc(db, "cuentas", id), {
                 accountName: name,
-                defaultDate: date
+                email: email,
+                password: password,
+                defaultDate: date,
+                cost: cost
             });
         } else {
             // Create New
             await addDoc(collection(db, "cuentas"), {
                 accountName: name,
+                email: email,
+                password: password,
                 defaultDate: date,
+                cost: cost,
                 profiles: [null, null, null, null, null]
             });
         }
@@ -280,7 +335,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderAccountDetails(account) {
         detailAccountName.innerText = account.accountName;
+        detailAccountEmail.innerText = account.email || "No registrado";
+        detailAccountPassword.innerText = account.password || "No establecida";
         detailAccountDate.innerText = formatDate(parseLocalDate(account.defaultDate));
+        detailAccountCost.innerText = `₡${account.cost.toLocaleString()}`;
+
+        const profCount = account.profiles.filter(p => p !== null).length;
+        const profit = (profCount * 1500) - account.cost;
+        detailAccountProfit.innerText = `${profit >= 0 ? '+' : ''}₡${profit.toLocaleString()}`;
+        detailAccountProfit.style.color = profit >= 0 ? '#2ecc71' : '#e63946';
 
         profilesList.innerHTML = '';
 
@@ -298,11 +361,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="display:flex; align-items:center;">
                         <span class="profile-index" style="background:var(--primary-color); color:white;">#${i + 1}</span>
                         <div style="display:flex; flex-direction:column; margin-left:8px;">
-                            <span class="profile-number" style="font-weight:bold;">${profile.number}</span>
+                            <span class="profile-number" style="font-weight:bold;">${profile.number} ${profile.name ? `- ${profile.name}` : ''}</span>
                             <span style="font-size:0.75rem; color:#aaa;">${formatDate(parseLocalDate(profile.purchaseDate))}</span>
                         </div>
                     </div>
-                    <i data-lucide="chevron-right" style="width:16px; color:#666;"></i>
+                    <div style="display:flex; align-items:center;">
+                        ${profile.pin ? `<span style="font-size:0.8rem; color:var(--primary-color); font-weight:bold; margin-right:10px;">PIN: ${profile.pin}</span>` : ''}
+                        <i data-lucide="chevron-right" style="width:16px; color:#666;"></i>
+                    </div>
                 `;
             } else {
                 // Empty
@@ -332,18 +398,33 @@ document.addEventListener('DOMContentLoaded', () => {
             editAccountBtn.classList.add('hidden');
             editAccountActions.classList.remove('hidden');
             editDetailAccountName.value = currentAccount.accountName;
+            editDetailAccountEmail.value = currentAccount.email || "";
+            editDetailAccountPassword.value = currentAccount.password || "";
             editDetailAccountDate.value = currentAccount.defaultDate;
+            editDetailAccountCost.value = currentAccount.cost;
             detailAccountName.classList.add('hidden');
+            detailAccountEmail.classList.add('hidden');
+            detailAccountPassword.classList.add('hidden');
             detailAccountDate.classList.add('hidden');
+            detailAccountCost.classList.add('hidden');
             editDetailAccountName.classList.remove('hidden');
+            editDetailAccountEmail.classList.remove('hidden');
+            editDetailAccountPassword.classList.remove('hidden');
             editDetailAccountDate.classList.remove('hidden');
+            editDetailAccountCost.classList.remove('hidden');
         } else {
             editAccountBtn.classList.remove('hidden');
             editAccountActions.classList.add('hidden');
             detailAccountName.classList.remove('hidden');
+            detailAccountEmail.classList.remove('hidden');
+            detailAccountPassword.classList.remove('hidden');
             detailAccountDate.classList.remove('hidden');
+            detailAccountCost.classList.remove('hidden');
             editDetailAccountName.classList.add('hidden');
+            editDetailAccountEmail.classList.add('hidden');
+            editDetailAccountPassword.classList.add('hidden');
             editDetailAccountDate.classList.add('hidden');
+            editDetailAccountCost.classList.add('hidden');
         }
     }
 
@@ -354,7 +435,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentAccount) return;
         await updateDoc(doc(db, "cuentas", currentAccount.id), {
             accountName: editDetailAccountName.value,
-            defaultDate: editDetailAccountDate.value
+            email: editDetailAccountEmail.value,
+            password: editDetailAccountPassword.value,
+            defaultDate: editDetailAccountDate.value,
+            cost: parseFloat(editDetailAccountCost.value) || 0
         });
         toggleAccountEditMode(false);
     });
@@ -403,6 +487,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         profileForm.reset();
         tempProfileImageBase64 = null;
+        profilePinInput.value = '';
+        profileUserNameInput.value = '';
         profileImagePreviewContainer.classList.add('hidden');
 
         // Defaults
@@ -461,7 +547,9 @@ document.addEventListener('DOMContentLoaded', () => {
     profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const number = profileNumberInput.value;
+        const name = profileUserNameInput.value;
         const date = profileDateInput.value;
+        const pin = profilePinInput.value;
         const method = profilePaymentMethod ? profilePaymentMethod.value : 'digital';
 
         // Get the desired Target Slot from dropdown
@@ -478,7 +566,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const newProfileData = {
             id: Date.now().toString(),
             number: number,
+            name: name,
             purchaseDate: date,
+            pin: pin,
             paymentProof: finalProof
         };
 
@@ -534,7 +624,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (editDetailProfileSlot) editDetailProfileSlot.value = index.toString();
 
         detailProfileNumber.innerText = profile.number;
+        detailProfileUserName.innerText = profile.name || "Sin nombre";
         detailProfileDate.innerText = formatDate(parseLocalDate(profile.purchaseDate));
+        detailProfilePin.innerText = profile.pin || "Sin PIN";
 
         // Status
         const purchase = parseLocalDate(profile.purchaseDate);
@@ -575,7 +667,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const profile = currentAccount.profiles[currentProfileIndex];
             editDetailProfileNumber.value = profile.number;
+            editDetailProfileUserName.value = profile.name || "";
             editDetailProfileDate.value = profile.purchaseDate;
+            editDetailProfilePin.value = profile.pin || "";
             tempEditProfileImageBase64 = profile.paymentProof;
 
             // Toggle Slot Selector
@@ -585,9 +679,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (editDetailProfileSlot) editDetailProfileSlot.classList.remove('hidden');
 
             detailProfileNumber.classList.add('hidden');
+            detailProfileUserName.classList.add('hidden');
             detailProfileDate.classList.add('hidden');
+            detailProfilePin.classList.add('hidden');
             editDetailProfileNumber.classList.remove('hidden');
+            editDetailProfileUserName.classList.remove('hidden');
             editDetailProfileDate.classList.remove('hidden');
+            editDetailProfilePin.classList.remove('hidden');
 
             // Toggle Method Selector
             if (editProfileMethodContainer) editProfileMethodContainer.classList.remove('hidden');
@@ -611,9 +709,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (editDetailProfileSlot) editDetailProfileSlot.classList.add('hidden');
 
             detailProfileNumber.classList.remove('hidden');
+            detailProfileUserName.classList.remove('hidden');
             detailProfileDate.classList.remove('hidden');
+            detailProfilePin.classList.remove('hidden');
             editDetailProfileNumber.classList.add('hidden');
+            editDetailProfileUserName.classList.add('hidden');
             editDetailProfileDate.classList.add('hidden');
+            editDetailProfilePin.classList.add('hidden');
 
             if (editProfileMethodContainer) editProfileMethodContainer.classList.add('hidden');
             editProfileImageContainer.classList.add('hidden');
@@ -673,7 +775,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const updatedProfile = {
             ...currentAccount.profiles[currentProfileIndex],
             number: editDetailProfileNumber.value,
+            name: editDetailProfileUserName.value,
             purchaseDate: editDetailProfileDate.value,
+            pin: editDetailProfilePin.value,
             paymentProof: finalProof
         };
 
